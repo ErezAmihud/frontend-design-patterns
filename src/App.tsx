@@ -1,26 +1,63 @@
 import './App.css';
 
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect, useRef } from 'react';
 
-function App() {
-  const [seconds, setSeconds] = useState(0);
+interface State {
+  counter: number
+}
 
-  function reset() {
-    setSeconds(0);
+const initialState: State = {
+  counter: 0
+};
+
+type CounterIncreaseMsg = {
+  type: "CounterIncreaseMsg";
+};
+
+type ResetCounterMsg = {
+  type: "ResetCounterMsg";
+};
+
+type Msg = CounterIncreaseMsg | ResetCounterMsg;
+
+
+function assertUnreachable(x: never): never {
+  throw new Error("Didn't expect to get here");
+}
+
+function update(state: State, msg: Msg) {
+  switch (msg.type) {
+    case "CounterIncreaseMsg": {
+      return { ...state, counter: state.counter+1 };
+    }
+    case "ResetCounterMsg": {
+      return { ...state, counter: 0 };
+    }
   }
 
+  return assertUnreachable(msg);
+}
+
+
+
+
+function App() {
+  const [state, dispatch] = useReducer(update, initialState);
+
   useEffect(() => {
-    let interval = setInterval(() => setSeconds(seconds => seconds + 1), 1000);
+    const interval = setInterval(() => {
+      dispatch({ type: "CounterIncreaseMsg" });
+    }, 1000);
     return () => clearInterval(interval);
-  }, [seconds]);
+  });
 
   return (
     <div className="App">
       <header className="App-header">
         <p>
-          {seconds}s
+          {state.counter}s
         </p>
-        <button className="button" onClick={reset}>
+        <button className="button" onClick={(e) => dispatch({type: "ResetCounterMsg"})}>
           Reset
         </button>
       </header>
